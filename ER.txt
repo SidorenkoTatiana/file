@@ -1,0 +1,17 @@
+Варианты отношений:
+0 или 1: |o--
+только 1: ||--
+0 или много: }o--
+1 или много: }|--
+
+Заготовка кода:
+@startuml
+entity "__" {
+  * id : integer <<PK>>
+  --
+  * login : varchar
+  * password : varchar
+...
+}
+...
+@enduml
