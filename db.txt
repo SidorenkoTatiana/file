@@ -1,0 +1,90 @@
+Функции:
+1. Вставка
+CREATE OR REPLACE FUNCTION sidorenko_t_v.add_tabl(character varying, ...)
+ RETURNS character varying
+ LANGUAGE sql
+AS $function$
+	insert into tabl(smth, ...)
+    values ($1, ...)
+    returning smth;
+$function$;
+
+2. Удаление
+CREATE OR REPLACE FUNCTION sidorenko_t_v.delete_tabl(p_smth character varying)
+ RETURNS void
+ LANGUAGE sql
+AS $function$
+	DELETE FROM tabl
+    WHERE smth = p_smth;
+$function$; 
+
+3. Редактирование
+CREATE OR REPLACE FUNCTION sidorenko_t_v.update_tabl(p_smth character varying, p_smth2 character varying, ...)
+ RETURNS character varying
+ LANGUAGE sql
+AS $function$
+	UPDATE tabl
+    SET smth2 = COALESCE(p_smth2, smth2),
+        ...
+    WHERE smth = p_smth
+    RETURNING p_smth;
+$function$; 
+
+Триггеры
+1. Удаление
+Функция:
+CREATE OR REPLACE FUNCTION sidorenko_t_v.tgf_delete_tabl()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  DELETE FROM tabl1 WHERE smth = OLD.smth;
+  RETURN OLD;
+END;
+$function$
+; 
+Триггер:
+create trigger tg_delete_tabl after
+delete
+    on
+    sidorenko_t_v.tabl for each row execute function tgf_delete_tabl();
+
+2. Вставка
+CREATE OR REPLACE FUNCTION sidorenko_t_v.tgf_tabl()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+  IF NEW.result IS NULL OR NEW.result = '' THEN
+    RAISE EXCEPTION 'The result cannot be null or empty.';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+; 
+В триггер - insert
+
+3. Редактирование
+CREATE OR REPLACE FUNCTION sidorenko_t_v.tgf_tabl_update()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF NEW.name IS NULL OR TRIM(NEW.name) = '' THEN
+        RAISE EXCEPTION 'Name cannot be empty';
+    END IF;
+    IF NEW.address IS NOT NULL AND LENGTH(NEW.adderss) > 255 THEN
+        RAISE EXCEPTION 'Address cannot exceed 255 characters';
+    END IF;
+    IF NEW.gender NOT IN ('M', 'F') THEN
+        RAISE EXCEPTION 'Gender must be either "M" or "F"';
+    END IF;
+    IF NEW.state_num IS NULL OR TRIM(NEW.state_num) = '' THEN
+        RAISE EXCEPTION 'State number cannot be empty';
+    END IF;
+
+    RETURN NEW;
+END;
+$function$
+; 
+В триггер - insert or update
